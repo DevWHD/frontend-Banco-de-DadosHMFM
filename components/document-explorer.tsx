@@ -296,59 +296,60 @@ export default function DocumentExplorer() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-gradient-to-b from-background via-background to-muted/30">
       {/* Top bar */}
-      <header className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card">
+      <header className="flex items-center gap-3 px-6 py-4 border-b border-border/40 bg-gradient-to-r from-card/80 to-card/60 backdrop-blur-md sticky top-0 z-40 shadow-sm">
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 lg:hidden"
+          className="h-9 w-9 lg:hidden hover:bg-accent transition-colors"
           onClick={() => setSidebarOpen(!sidebarOpen)}
           aria-label={sidebarOpen ? "Fechar painel" : "Abrir painel"}
         >
           {sidebarOpen ? (
-            <PanelLeftClose className="w-4 h-4" />
+            <PanelLeftClose className="w-5 h-5" />
           ) : (
-            <PanelLeft className="w-4 h-4" />
+            <PanelLeft className="w-5 h-5" />
           )}
         </Button>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-handleSelectFoldermary flex items-center justify-center">
-            <Hospital className="w-5 h-5 text-primary-foreground" />
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-md">
+            <Hospital className="w-6 h-6 text-white" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-semibold text-foreground leading-tight">
+            <span className="text-base font-bold text-foreground leading-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
               HMFM
             </span>
-            <span className="text-xs text-muted-foreground leading-tight hidden sm:block">
+            <span className="text-xs text-muted-foreground leading-tight hidden sm:block font-medium">
               Hospital Maternidade Fernando Magalhães
             </span>
           </div>
         </div>
-        <div className="ml-auto flex items-center gap-3">
-          <span className="text-xs text-muted-foreground hidden md:block">
-            Explorer de Documentos
+        <div className="ml-auto flex items-center gap-4">
+          <span className="text-xs font-medium text-muted-foreground/70 hidden lg:block px-3 py-1 rounded-full bg-accent/50">
+            Explorador de Documentos
           </span>
+          <div className="h-5 w-px bg-border/30 hidden lg:block" />
           <ThemeToggle />
         </div>
       </header>
 
       {/* Main layout */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden gap-0">
         {/* Sidebar */}
         <aside
           className={cn(
-            "border-r border-border bg-sidebar-background transition-all duration-200 flex-shrink-0 overflow-hidden",
+            "border-r border-border/40 bg-gradient-to-b from-card/60 to-card/30 backdrop-blur-sm transition-all duration-300 flex-shrink-0 overflow-hidden",
             sidebarOpen ? "w-72" : "w-0"
           )}
         >
-          <div className="w-72 h-full">
+          <div className="w-72 h-full flex flex-col">
             {foldersLoading ? (
-              <div className="p-4 space-y-3">
-                {Array.from({ length: 8 }).map((_, i) => (
+              <div className="p-4 space-y-3 flex-1">
+                {Array.from({ length: 10 }).map((_, i) => (
                   <div
                     key={`skel-${i}`}
-                    className="h-6 rounded bg-muted animate-pulse"
+                    className="h-8 rounded-lg bg-muted/60 animate-pulse"
                   />
                 ))}
               </div>
@@ -389,39 +390,46 @@ export default function DocumentExplorer() {
 
       {/* Folder create/rename dialog */}
       <Dialog open={folderDialogOpen} onOpenChange={setFolderDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              {folderDialogMode === "create" ? "Nova Pasta" : "Renomear Pasta"}
+            <DialogTitle className="text-xl">
+              {folderDialogMode === "create" ? "📁 Nova Pasta" : "✏️ Renomear Pasta"}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-sm text-muted-foreground">
               {folderDialogMode === "create"
-                ? "Insira o nome da nova pasta."
+                ? "Crie uma nova pasta para organizar seus documentos."
                 : "Edite o nome da pasta."}
             </DialogDescription>
           </DialogHeader>
           <Input
-            placeholder="Nome da pasta"
+            placeholder={folderDialogMode === "create" ? "Ex: Documentação 2024" : "Novo nome"}
             value={folderName}
             onChange={(e) => setFolderName(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") submitFolder();
             }}
             autoFocus
+            className="text-base h-10"
           />
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
               variant="outline"
               onClick={() => setFolderDialogOpen(false)}
+              className="text-sm"
             >
               Cancelar
             </Button>
-            <Button onClick={submitFolder} disabled={folderSaving || !folderName.trim()}>
-              {folderSaving
-                ? "Salvando..."
-                : folderDialogMode === "create"
-                  ? "Criar"
-                  : "Salvar"}
+            <Button onClick={submitFolder} disabled={folderSaving || !folderName.trim()} className="text-sm gap-2">
+              {folderSaving ? (
+                <>
+                  <div className="w-4 h-4 rounded-full border-2 border-background border-t-foreground animate-spin" />
+                  Salvando...
+                </>
+              ) : folderDialogMode === "create" ? (
+                "Criar Pasta"
+              ) : (
+                "Salvar"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -429,18 +437,21 @@ export default function DocumentExplorer() {
 
       {/* Delete folder confirmation dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Excluir Pasta</DialogTitle>
-            <DialogDescription>
-              Tem certeza que deseja excluir esta pasta? Todos os arquivos e
-              subpastas serão removidos permanentemente.
+            <DialogTitle className="text-xl flex items-center gap-2">
+              <span className="text-2xl">⚠️</span>
+              Excluir Pasta
+            </DialogTitle>
+            <DialogDescription className="text-sm">
+              Tem certeza que deseja excluir esta pasta? Todos os arquivos e subpastas serão removidos permanentemente.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
+              className="text-sm"
             >
               Cancelar
             </Button>
@@ -448,8 +459,16 @@ export default function DocumentExplorer() {
               variant="destructive"
               onClick={confirmDeleteFolder}
               disabled={deleteLoading}
+              className="text-sm gap-2"
             >
-              {deleteLoading ? "Excluindo..." : "Excluir"}
+              {deleteLoading ? (
+                <>
+                  <div className="w-4 h-4 rounded-full border-2 border-background border-t-foreground animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                "Excluir com Certeza"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -457,22 +476,22 @@ export default function DocumentExplorer() {
 
       {/* Upload dialog */}
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Upload de Arquivos</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-xl">📤 Upload de Arquivos</DialogTitle>
+            <DialogDescription className="text-sm">
               Selecione os arquivos para enviar para{" "}
-              <strong>{selectedFolder?.name}</strong>.
+              <strong className="text-foreground">{selectedFolder?.name}</strong>.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div
               className={cn(
-                "border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
-                "hover:border-primary/50 hover:bg-accent/50",
+                "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200",
+                "hover:border-primary/60 hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-primary/50",
                 uploadFiles.length > 0
-                  ? "border-primary/30 bg-accent/30"
-                  : "border-border"
+                  ? "border-primary/40 bg-primary/5"
+                  : "border-border/60 hover:border-primary/40"
               )}
               onClick={() => fileInputRef.current?.click()}
               role="button"
@@ -492,30 +511,35 @@ export default function DocumentExplorer() {
                 accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.jpeg,.gif,.bmp,.webp"
               />
               {uploadFiles.length > 0 ? (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-foreground">
+                <div className="space-y-3">
+                  <div className="text-3xl">✅</div>
+                  <p className="text-sm font-semibold text-foreground">
                     {uploadFiles.length} arquivo
-                    {uploadFiles.length > 1 ? "s" : ""} selecionado
+                    {uploadFiles.length > 1 ? "s" : ""} pronto
                     {uploadFiles.length > 1 ? "s" : ""}
                   </p>
                   <ul className="text-xs text-muted-foreground space-y-1 max-h-32 overflow-auto">
                     {uploadFiles.map((f, i) => (
-                      <li key={`upload-${i}`} className="truncate">
-                        {f.name}
+                      <li key={`upload-${i}`} className="truncate px-2">
+                        • {f.name}
                       </li>
                     ))}
                   </ul>
-                  <p className="text-xs text-muted-foreground">
-                    Clique para alterar a seleção
+                  <p className="text-xs text-muted-foreground/70 pt-1">
+                    Clique para alterar
                   </p>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">
+                <div className="space-y-3">
+                  <div className="text-4xl">📁</div>
+                  <p className="text-sm font-medium text-foreground">
                     Clique para selecionar arquivos
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    PDF, DOCX, XLSX, imagens
+                  <p className="text-xs text-muted-foreground/70">
+                    ou arraste e solte aqui
+                  </p>
+                  <p className="text-xs text-muted-foreground/50">
+                    Formatos: PDF, DOCX, XLSX, imagens
                   </p>
                 </div>
               )}
@@ -523,26 +547,37 @@ export default function DocumentExplorer() {
 
             {uploading && (
               <div className="space-y-2">
-                <Progress value={uploadProgress} className="h-2" />
-                <p className="text-xs text-muted-foreground text-center">
-                  Enviando... {uploadProgress}%
-                </p>
+                <div className="space-y-1">
+                  <Progress value={uploadProgress} className="h-2.5 rounded-full" />
+                  <p className="text-xs text-muted-foreground text-center font-medium">
+                    Enviando... {uploadProgress}%
+                  </p>
+                </div>
               </div>
             )}
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
               variant="outline"
               onClick={() => setUploadDialogOpen(false)}
               disabled={uploading}
+              className="text-sm"
             >
               Cancelar
             </Button>
             <Button
               onClick={submitUpload}
               disabled={uploading || uploadFiles.length === 0}
+              className="text-sm gap-2"
             >
-              {uploading ? "Enviando..." : "Enviar"}
+              {uploading ? (
+                <>
+                  <div className="w-4 h-4 rounded-full border-2 border-background border-t-foreground animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                "Enviar Arquivos"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

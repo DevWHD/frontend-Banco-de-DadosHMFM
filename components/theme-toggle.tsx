@@ -32,33 +32,49 @@ export function ThemeToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <Sun className="w-4 h-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute w-4 h-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="h-9 w-9 rounded-lg border-border/40 bg-background/60 hover:bg-accent/50 transition-all duration-200"
+        >
+          <Sun className="w-5 h-5 rotate-0 scale-100 transition-all duration-300 dark:-rotate-90 dark:scale-0" />
+          <Moon className="absolute w-5 h-5 rotate-90 scale-0 transition-all duration-300 dark:rotate-0 dark:scale-100" />
           <span className="sr-only">Alternar tema</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="w-40 border-border/40 bg-card/80 backdrop-blur-sm">
         <DropdownMenuItem
           onClick={() => setTheme("light")}
-          className={cn(theme === "light" && "bg-accent")}
+          className={cn(
+            "gap-2 cursor-pointer transition-colors",
+            theme === "light" && "bg-primary/10 text-primary"
+          )}
         >
           <Sun className="w-4 h-4" />
-          <span>Claro</span>
+          <span className="font-medium">Claro</span>
+          {theme === "light" && <span className="ml-auto text-xs">✓</span>}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setTheme("dark")}
-          className={cn(theme === "dark" && "bg-accent")}
+          className={cn(
+            "gap-2 cursor-pointer transition-colors",
+            theme === "dark" && "bg-primary/10 text-primary"
+          )}
         >
           <Moon className="w-4 h-4" />
-          <span>Escuro</span>
+          <span className="font-medium">Escuro</span>
+          {theme === "dark" && <span className="ml-auto text-xs">✓</span>}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setTheme("system")}
-          className={cn(theme === "system" && "bg-accent")}
+          className={cn(
+            "gap-2 cursor-pointer transition-colors",
+            theme === "system" && "bg-primary/10 text-primary"
+          )}
         >
           <Monitor className="w-4 h-4" />
-          <span>Sistema</span>
+          <span className="font-medium">Sistema</span>
+          {theme === "system" && <span className="ml-auto text-xs">✓</span>}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

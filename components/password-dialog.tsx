@@ -52,24 +52,26 @@ export default function PasswordDialog({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md border-border/40 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
         <DialogHeader>
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Lock className="w-5 h-5 text-primary" />
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center shadow-md">
+              <Lock className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <DialogTitle>Pasta Protegida</DialogTitle>
-              <DialogDescription className="text-xs">
+              <DialogTitle className="text-xl">🔒 Pasta Protegida</DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground/70 mt-1">
                 {folderName}
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="password">Digite a senha de 6 dígitos</Label>
+        <form onSubmit={handleSubmit} className="space-y-5 py-4">
+          <div className="space-y-3">
+            <Label htmlFor="password" className="text-sm font-semibold">
+              Digite a senha de 6 dígitos
+            </Label>
             <Input
               id="password"
               type="password"
@@ -82,30 +84,34 @@ export default function PasswordDialog({
                 setPassword(val);
               }}
               onKeyDown={handleKeyDown}
-              placeholder="••••••"
-              className="text-center text-2xl tracking-widest"
+              placeholder="• • • • • •"
+              className="text-center text-3xl tracking-[0.5rem] font-semibold h-12 bg-background/60 border-border/40"
               autoFocus
               autoComplete="off"
             />
             {error && (
-              <p className="text-sm text-destructive font-medium">{error}</p>
+              <p className="text-sm text-destructive font-semibold flex items-center gap-2">
+                <span>⚠️</span>
+                {error}
+              </p>
             )}
-            <p className="text-xs text-muted-foreground">
-              A senha deve conter exatamente 6 números
+            <p className="text-xs text-muted-foreground/70 px-1">
+              A senha deve conter exatamente 6 dígitos numéricos
             </p>
           </div>
         </form>
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={onCancel} type="button">
+          <Button variant="outline" onClick={onCancel} type="button" className="text-sm">
             Cancelar
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={password.length !== 6}
             type="submit"
+            className="text-sm gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90"
           >
-            Acessar
+            {password.length === 6 ? "✓ Acessar Pasta" : "Acessar"}
           </Button>
         </DialogFooter>
       </DialogContent>
