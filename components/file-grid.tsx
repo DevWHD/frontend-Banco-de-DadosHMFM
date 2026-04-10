@@ -9,6 +9,7 @@ import {
   Trash2,
   Upload,
   FolderOpen,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -25,10 +26,14 @@ export type FileItem = {
 
 type FileGridProps = {
   files: FileItem[];
+  subfolders: any[];
   folderName: string | null;
   isLoading: boolean;
   onUpload: () => void;
+  onCreateSubfolder: () => void;
+  onSelectFolder: (folderId: number) => void;
   onDelete: (fileId: number) => void;
+  onDeleteFolder: (folderId: number) => void;
   onDownload: (file: FileItem) => void;
 };
 
@@ -81,10 +86,14 @@ function formatDate(dateStr: string) {
 
 export default function FileGrid({
   files,
+  subfolders,
   folderName,
   isLoading,
   onUpload,
+  onCreateSubfolder,
+  onSelectFolder,
   onDelete,
+  onDeleteFolder,
   onDownload,
 }: FileGridProps) {
   if (!folderName) {
@@ -113,13 +122,19 @@ export default function FileGrid({
               : `${files.length} arquivo${files.length !== 1 ? "s" : ""} encontrado${files.length !== 1 ? "s" : ""}`}
           </p>
         </div>
-        <Button onClick={onUpload} size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
-          <Upload className="w-5 h-5" />
-          <span className="hidden sm:inline">Upload</span>
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button onClick={onCreateSubfolder} size="lg" variant="outline" className="gap-2 shadow-md hover:shadow-lg transition-shadow border-primary/30 hover:border-primary/50 hover:bg-primary/5">
+            <FolderOpen className="w-5 h-5" />
+            <span className="hidden sm:inline">Nova Subpasta</span>
+          </Button>
+          <Button onClick={onUpload} size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
+            <Upload className="w-5 h-5" />
+            <span className="hidden sm:inline">Upload</span>
+          </Button>
+        </div>
       </div>
 
-      {/* Files */}
+      {/* Files and Subfolders */}
       <div className="flex-1 overflow-auto p-8">
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -134,24 +149,69 @@ export default function FileGrid({
               </div>
             ))}
           </div>
-        ) : files.length === 0 ? (
+        ) : subfolders.length === 0 && files.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-muted-foreground gap-4">
             <div className="text-5xl opacity-40">📄</div>
-            <p className="text-base font-semibold text-foreground">Nenhum arquivo encontrado</p>
-            <p className="text-sm text-muted-foreground/70">Envie seus primeiros documentos agora</p>
-            <Button variant="outline" size="sm" onClick={onUpload} className="gap-2 mt-2 bg-background/60 hover:bg-background/80 border-border/50">
-              <Upload className="w-4 h-4" />
-              Enviar arquivo
-            </Button>
+            <p className="text-base font-semibold text-foreground">Nenhum conteúdo encontrado</p>
+            <p className="text-sm text-muted-foreground/70">Crie subpastas ou envie documentos</p>
+            <div className="flex gap-3 mt-3">
+              <Button variant="outline" size="sm" onClick={onCreateSubfolder} className="gap-2 bg-background/60 hover:bg-background/80 border-border/50">
+                <FolderOpen className="w-4 h-4" />
+                Nova Subpasta
+              </Button>
+              <Button variant="outline" size="sm" onClick={onUpload} className="gap-2 bg-background/60 hover:bg-background/80 border-border/50">
+                <Upload className="w-4 h-4" />
+                Enviar arquivo
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {/* Subpastas - aparecem primeiro */}
+            {subfolders.map((subfolder) => (
+              <div
+                key={`subfolder-${subfolder.id}`}
+                className={cn(
+                  "group relative rounded-xl border-2 border-dashed border-primary/40 bg-gradient-to-br from-primary/5 to-primary/2 p-6 backdrop-blur-sm",
+                  "hover:border-primary/70 hover:shadow-lg transition-all duration-300"
+                )}
+              >
+                {/* Delete button */}
+                <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <button
+                    className="p-2 rounded-lg hover:bg-destructive/10 transition-all duration-200 transform hover:scale-110"
+                    onClick={() => onDeleteFolder(subfolder.id)}
+                    aria-label={`Excluir pasta ${subfolder.name}`}
+                    title="Excluir pasta"
+                  >
+                    <Trash2 className="w-5 h-5 text-destructive" />
+                  </button>
+                </div>
+
+                {/* Folder content */}
+                <div
+                  onClick={() => onSelectFolder(subfolder.id)}
+                  className="flex flex-col items-center justify-center h-full text-center cursor-pointer"
+                >
+                  <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center mb-4">
+                    <FolderOpen className="w-8 h-8 text-primary" />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground truncate max-w-full px-2" title={subfolder.name}>
+                    {subfolder.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground/60 mt-2">📁 Subpasta</p>
+                </div>
+              </div>
+            ))}
+
+            {/* Arquivos */}
             {files.map((file) => (
               <div
                 key={file.id}
                 className={cn(
                   "group relative rounded-xl border border-border/40 bg-gradient-to-br from-card to-card/60 p-6 backdrop-blur-sm",
-                  "hover:border-primary/30 hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer"
+                  "hover:border-primary/30 hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer",
+                  !file.blob_url && "opacity-60 cursor-not-allowed"
                 )}
               >
                 <div className="flex items-start justify-between mb-4">
@@ -160,10 +220,14 @@ export default function FileGrid({
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     <button
-                      className="p-2 rounded-lg hover:bg-primary/10 transition-all duration-200 transform hover:scale-110"
-                      onClick={() => onDownload(file)}
+                      className={cn(
+                        "p-2 rounded-lg hover:bg-primary/10 transition-all duration-200 transform hover:scale-110",
+                        !file.blob_url && "opacity-50 cursor-not-allowed hover:bg-transparent"
+                      )}
+                      onClick={() => file.blob_url && onDownload(file)}
+                      disabled={!file.blob_url}
                       aria-label={`Baixar ${file.name}`}
-                      title="Baixar arquivo"
+                      title={file.blob_url ? "Baixar arquivo" : "URL de download não disponível"}
                     >
                       <Download className="w-5 h-5 text-primary" />
                     </button>
@@ -177,6 +241,11 @@ export default function FileGrid({
                     </button>
                   </div>
                 </div>
+                {!file.blob_url && (
+                  <div className="absolute inset-0 rounded-xl flex items-center justify-center bg-black/20 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                    <p className="text-xs text-yellow-500 font-semibold">Download indisponível</p>
+                  </div>
+                )}
                 <p className="text-sm font-semibold text-foreground truncate" title={file.name}>
                   {file.name}
                 </p>

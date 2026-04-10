@@ -24,12 +24,16 @@ import {
 import { cn } from "@/lib/utils";
 import API_URL from "@/lib/config";
 import { checkFolderPassword } from "@/lib/folder-passwords";
+import { useFileDownload } from "@/hooks/useFileDownload";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export default function DocumentExplorer() {
   const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Download state
+  const { downloadFile, isDownloading: isFileDownloading } = useFileDownload();
 
   // Password protection state
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
@@ -47,6 +51,7 @@ export default function DocumentExplorer() {
   >(null);
   const [folderDialogId, setFolderDialogId] = useState<number | null>(null);
   const [folderName, setFolderName] = useState("");
+  const [folderPassword, setFolderPassword] = useState("");
   const [folderSaving, setFolderSaving] = useState(false);
 
   // Delete confirmation state
@@ -72,6 +77,11 @@ export default function DocumentExplorer() {
     selectedFolderId ? `${API_URL}/api/files?folder_id=${selectedFolderId}` : null,
     fetcher
   );
+
+  // Calcular subpastas da pasta selecionada
+  const subfolders = selectedFolderId
+    ? folders.filter((f: any) => f.parent_id === selectedFolderId)
+    : [];
 
   // Find selected folder name
   const selectedFolder = folders.find(
@@ -131,6 +141,7 @@ export default function DocumentExplorer() {
     setFolderDialogParentId(parentId);
     setFolderDialogId(null);
     setFolderName("");
+    setFolderPassword("");
     setFolderDialogOpen(true);
   }, []);
 
@@ -149,17 +160,41 @@ export default function DocumentExplorer() {
 
   const submitFolder = async () => {
     if (!folderName.trim()) return;
+    
+    // Se for criar pasta raiz, senha é obrigatória
+    if (folderDialogMode === "create" && folderDialogParentId === null) {
+      if (!folderPassword.trim()) {
+        toast.error("Senha é obrigatória para setores e departamentos");
+        return;
+      }
+      if (folderPassword.length !== 6) {
+        toast.error("Senha deve ter exatamente 6 dígitos");
+        return;
+      }
+      if (!/^\d+$/.test(folderPassword)) {
+        toast.error("Senha deve conter apenas números");
+        return;
+      }
+    }
+
     setFolderSaving(true);
 
     try {
       if (folderDialogMode === "create") {
+        const payload: any = {
+          name: folderName.trim(),
+          parent_id: folderDialogParentId,
+        };
+        
+        // Adicionar senha apenas para pastas raiz
+        if (folderDialogParentId === null && folderPassword) {
+          payload.password = folderPassword;
+        }
+
         const res = await fetch(`${API_URL}/api/folders`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: folderName.trim(),
-            parent_id: folderDialogParentId,
-          }),
+          body: JSON.stringify(payload),
         });
         if (!res.ok) throw new Error("Falha ao criar pasta");
         toast.success("Pasta criada com sucesso");
@@ -283,17 +318,16 @@ export default function DocumentExplorer() {
     }
   };
 
-  const handleDownload = (file: FileItem) => {
-    const a = document.createElement("a");
-    a.href = file.blob_url;
-    a.download = file.name;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    toast.success(`Baixando ${file.name}`);
-  };
+  const handleDownload = useCallback((file: FileItem) => {
+    downloadFile(
+      file.blob_url,
+      file.name,
+      {
+        fallbackApiUrl: API_URL,
+        fileId: file.id,
+      }
+    );
+  }, [downloadFile]);
 
   return (
     <div className="flex flex-col h-screen bg-gradient-to-b from-background via-background to-muted/30">
@@ -370,11 +404,19 @@ export default function DocumentExplorer() {
         <main className="flex-1 overflow-hidden">
           <FileGrid
             files={files}
+            subfolders={subfolders}
             folderName={selectedFolder?.name || null}
             isLoading={filesLoading}
             onUpload={handleUpload}
+            onCreateSubfolder={() => {
+              if (selectedFolderId) {
+                handleCreateFolder(selectedFolderId);
+              }
+            }}
             onDelete={handleDeleteFile}
             onDownload={handleDownload}
+            onSelectFolder={handleSelectFolder}
+            onDeleteFolder={handleDeleteFolder}
           />
         </main>
       </div>
@@ -406,11 +448,42 @@ export default function DocumentExplorer() {
             value={folderName}
             onChange={(e) => setFolderName(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") submitFolder();
+              if (e.key === "Enter" && !(folderDialogMode === "create" && folderDialogParentId === null)) {
+                submitFolder();
+              }
             }}
             autoFocus
             className="text-base h-10"
           />
+          
+          {/* Campo de senha - apenas para pasta raiz (setor/departamento) */}
+          {folderDialogMode === "create" && folderDialogParentId === null && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground/70">
+                🔐 Senha (6 dígitos) - Obrigatória para Setores e Departamentos
+              </label>
+              <Input
+                type="password"
+                placeholder="Ex: 123456"
+                value={folderPassword}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+                  setFolderPassword(value);
+                }}
+                maxLength={6}
+                pattern="\d{6}"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && folderPassword.length === 6) {
+                    submitFolder();
+                  }
+                }}
+                className="text-base h-10 text-center tracking-widest font-mono"
+              />
+              <div className="text-xs text-muted-foreground/70">
+                {folderPassword.length}/6 dígitos
+              </div>
+            </div>
+          )}
           <DialogFooter className="gap-2 sm:gap-0">
             <Button
               variant="outline"
@@ -419,7 +492,7 @@ export default function DocumentExplorer() {
             >
               Cancelar
             </Button>
-            <Button onClick={submitFolder} disabled={folderSaving || !folderName.trim()} className="text-sm gap-2">
+            <Button onClick={submitFolder} disabled={folderSaving || !folderName.trim() || (folderDialogMode === "create" && folderDialogParentId === null && folderPassword.length !== 6)} className="text-sm gap-2">
               {folderSaving ? (
                 <>
                   <div className="w-4 h-4 rounded-full border-2 border-background border-t-foreground animate-spin" />

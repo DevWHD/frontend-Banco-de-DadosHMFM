@@ -104,44 +104,78 @@ function FolderItem({
         aria-selected={isSelected}
         aria-expanded={hasChildren ? isExpanded : undefined}
       >
+        {/* Seta de Expansão/Collapse */}
         <button
-          className="flex-shrink-0 w-4 h-4 flex items-center justify-center transition-transform duration-200"
+          className={cn(
+            "flex-shrink-0 w-5 h-5 flex items-center justify-center transition-transform duration-200 rounded hover:bg-accent/50",
+            !hasChildren && "cursor-default"
+          )}
           onClick={(e) => {
             e.stopPropagation();
-            onToggle(node.id);
+            if (hasChildren) {
+              onToggle(node.id);
+            }
           }}
           aria-label={isExpanded ? "Recolher pasta" : "Expandir pasta"}
+          disabled={!hasChildren}
         >
           {hasChildren ? (
             isExpanded ? (
-              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              <ChevronDown className="w-4 h-4 text-primary/60 transition-transform" />
             ) : (
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              <ChevronRight className="w-4 h-4 text-primary/60 transition-transform" />
             )
           ) : (
-            <span className="w-4" />
+            <div className="w-4 h-4" />
           )}
         </button>
 
+        {/* Ícone da Pasta */}
         {isExpanded ? (
           <FolderOpen className="w-4 h-4 flex-shrink-0 text-primary" />
         ) : (
           <Folder className="w-4 h-4 flex-shrink-0 text-primary/70" />
         )}
 
-        <span className="truncate flex-1">{node.name}</span>
+        {/* Nome da Pasta */}
+        <span className="truncate flex-1 font-medium">{node.name}</span>
 
+        {/* Botão de Criar Subpasta (Visível ao passar o mouse) */}
+        <button
+          className="opacity-0 group-hover:opacity-100 flex-shrink-0 p-1 rounded-md hover:bg-primary/10 transition-all duration-200 hover:text-primary"
+          onClick={(e) => {
+            e.stopPropagation();
+            onCreateFolder(node.id);
+          }}
+          aria-label="Criar subpasta"
+          title="Criar subpasta"
+        >
+          <FolderPlus className="w-4 h-4" />
+        </button>
+
+        {/* Botão de Excluir (Visível ao passar o mouse) */}
+        <button
+          className="opacity-0 group-hover:opacity-100 flex-shrink-0 p-1 rounded-md hover:bg-destructive/10 transition-all duration-200 hover:text-destructive"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDeleteFolder(node.id);
+          }}
+          aria-label="Excluir pasta"
+          title="Excluir pasta"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               className="opacity-0 group-hover:opacity-100 flex-shrink-0 p-1 rounded-md hover:bg-accent transition-all duration-200 -mr-1"
               onClick={(e) => e.stopPropagation()}
-              aria-label="Opções da pasta"
+              aria-label="Mais opções"
             >
               <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" side="right" className="w-44">
+          <DropdownMenuContent align="start" side="right" className="w-48">
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation();
@@ -162,37 +196,35 @@ function FolderItem({
               <Pencil className="w-4 h-4" />
               <span>Renomear</span>
             </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-destructive focus:text-destructive gap-2 cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDeleteFolder(node.id);
-              }}
-            >
-              <Trash2 className="w-4 h-4" />
-              <span>Excluir</span>
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
       {isExpanded && hasChildren && (
-        <div role="group">
+        <div role="group" className="relative">
           {node.children
             .sort((a, b) => a.name.localeCompare(b.name))
-            .map((child) => (
-              <FolderItem
-                key={child.id}
-                node={child}
-                level={level + 1}
-                selectedFolderId={selectedFolderId}
-                expandedIds={expandedIds}
-                onToggle={onToggle}
-                onSelectFolder={onSelectFolder}
-                onCreateFolder={onCreateFolder}
-                onRenameFolder={onRenameFolder}
-                onDeleteFolder={onDeleteFolder}
-              />
+            .map((child, index) => (
+              <div key={child.id} className="relative">
+                {/* Linha vertical para indicar continuação */}
+                {level < 3 && (
+                  <div
+                    className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-border/50 to-border/20"
+                    style={{ left: `${level * 14 + 28}px` }}
+                  />
+                )}
+                <FolderItem
+                  node={child}
+                  level={level + 1}
+                  selectedFolderId={selectedFolderId}
+                  expandedIds={expandedIds}
+                  onToggle={onToggle}
+                  onSelectFolder={onSelectFolder}
+                  onCreateFolder={onCreateFolder}
+                  onRenameFolder={onRenameFolder}
+                  onDeleteFolder={onDeleteFolder}
+                />
+              </div>
             ))}
         </div>
       )}
@@ -227,38 +259,57 @@ export default function FolderTree({
   );
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-4 border-b border-border/40 bg-gradient-to-r from-accent/30 to-transparent">
-        <h2 className="text-sm font-bold text-foreground">
-          Setores & Departamentos
-        </h2>
+    <div className="flex flex-col h-full bg-gradient-to-b from-card/50 to-transparent">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border/40 bg-gradient-to-r from-primary/5 via-primary/3 to-transparent backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          <Folder className="w-5 h-5 text-primary/70" />
+          <h2 className="text-sm font-semibold text-foreground/90">
+            Setores & Departamentos
+          </h2>
+        </div>
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 hover:bg-primary/10 transition-colors"
+          className="h-8 w-8 hover:bg-primary/15 hover:text-primary transition-all duration-200"
           onClick={() => onCreateFolder(null)}
           aria-label="Nova pasta raiz"
           title="Criar novo setor"
         >
-          <FolderPlus className="w-4 h-4 text-primary" />
+          <FolderPlus className="w-4 h-4" />
         </Button>
       </div>
       <ScrollArea className="flex-1">
         <div className="py-2 px-1" role="tree" aria-label="Navegação de pastas">
-          {tree.map((node) => (
-            <FolderItem
-              key={node.id}
-              node={node}
-              level={0}
-              selectedFolderId={selectedFolderId}
-              expandedIds={expandedIds}
-              onToggle={onToggle}
-              onSelectFolder={onSelectFolder}
-              onCreateFolder={onCreateFolder}
-              onRenameFolder={onRenameFolder}
-              onDeleteFolder={onDeleteFolder}
-            />
-          ))}
+          {tree.length > 0 ? (
+            tree.map((node) => (
+              <FolderItem
+                key={node.id}
+                node={node}
+                level={0}
+                selectedFolderId={selectedFolderId}
+                expandedIds={expandedIds}
+                onToggle={onToggle}
+                onSelectFolder={onSelectFolder}
+                onCreateFolder={onCreateFolder}
+                onRenameFolder={onRenameFolder}
+                onDeleteFolder={onDeleteFolder}
+              />
+            ))
+          ) : (
+            <div className="py-8 px-4 text-center">
+              <FolderOpen className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-xs text-muted-foreground">Nenhuma pasta encontrada</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-3 text-xs"
+                onClick={() => onCreateFolder(null)}
+              >
+                <FolderPlus className="w-3 h-3 mr-1" />
+                Criar primeira pasta
+              </Button>
+            </div>
+          )}
         </div>
       </ScrollArea>
     </div>
