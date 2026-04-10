@@ -26,7 +26,7 @@ import API_URL from "@/lib/config";
 import { checkFolderPassword } from "@/lib/folder-passwords";
 import { useFileDownload } from "@/hooks/useFileDownload";
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
+const fetcher = (url: string) => fetch(url, { cache: 'no-store' }).then((r) => r.json());
 
 export default function DocumentExplorer() {
   const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
@@ -193,6 +193,7 @@ export default function DocumentExplorer() {
 
         const res = await fetch(`${API_URL}/api/folders`, {
           method: "POST",
+          cache: 'no-store',
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
@@ -201,6 +202,7 @@ export default function DocumentExplorer() {
       } else {
         const res = await fetch(`${API_URL}/api/folders/${folderDialogId}`, {
           method: "PATCH",
+          cache: 'no-store',
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: folderName.trim() }),
         });
@@ -229,6 +231,7 @@ export default function DocumentExplorer() {
     try {
       const res = await fetch(`${API_URL}/api/folders/${deleteFolderId}`, {
         method: "DELETE",
+        cache: 'no-store',
       });
       if (!res.ok) throw new Error("Falha ao excluir pasta");
 
@@ -279,6 +282,7 @@ export default function DocumentExplorer() {
 
       const res = await fetch(`${API_URL}/api/upload`, {
         method: "POST",
+        cache: 'no-store',
         body: formData,
       });
 
@@ -307,7 +311,7 @@ export default function DocumentExplorer() {
 
   const handleDeleteFile = async (fileId: number) => {
     try {
-      const res = await fetch(`${API_URL}/api/files/${fileId}`, { method: "DELETE" });
+      const res = await fetch(`${API_URL}/api/files/${fileId}`, { method: "DELETE", cache: 'no-store' });
       if (!res.ok) throw new Error("Falha ao excluir arquivo");
 
       toast.success("Arquivo excluído");
